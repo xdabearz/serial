@@ -1,0 +1,55 @@
+[gd_scene load_steps=4 format=3 uid="uid://c07kh3u6hjcg0"]
+
+[ext_resource type="PackedScene" uid="uid://b6f1ukkhv40n" path="res://Scene/Player/player.tscn" id="1_ky2xn"]
+[ext_resource type="Texture2D" uid="uid://been8n8hg476p" path="res://Sprites/Environment/2d_metroidvania_serie_mockup_1_tileset.png" id="2_d5l25"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_36ygw"]
+size = Vector2(48, 16)
+
+[node name="dev_level" type="Node2D"]
+
+[node name="Player" parent="." instance=ExtResource("1_ky2xn")]
+position = Vector2(-51, -44)
+
+[node name="Camera2D" type="Camera2D" parent="."]
+zoom = Vector2(3, 3)
+
+[node name="ground" type="Node2D" parent="."]
+
+[node name="temp_ground_1" type="StaticBody2D" parent="ground"]
+
+[node name="Sprite2D" type="Sprite2D" parent="ground/temp_ground_1"]
+position = Vector2(2, 0)
+texture = ExtResource("2_d5l25")
+region_enabled = true
+region_rect = Rect2(32.1334, 80, 47.8666, 16)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ground/temp_ground_1"]
+position = Vector2(2, 0)
+shape = SubResource("RectangleShape2D_36ygw")
+
+[node name="temp_ground_2" type="StaticBody2D" parent="ground"]
+position = Vector2(-48, 0)
+
+[node name="Sprite2D" type="Sprite2D" parent="ground/temp_ground_2"]
+position = Vector2(2, 0)
+texture = ExtResource("2_d5l25")
+region_enabled = true
+region_rect = Rect2(32.1334, 80, 47.8666, 16)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ground/temp_ground_2"]
+position = Vector2(2, 0)
+shape = SubResource("RectangleShape2D_36ygw")
+
+[node name="temp_ground_3" type="StaticBody2D" parent="ground"]
+position = Vector2(48, 0)
+
+[node name="Sprite2D" type="Sprite2D" parent="ground/temp_ground_3"]
+position = Vector2(2, 0)
+texture = ExtResource("2_d5l25")
+region_enabled = true
+region_rect = Rect2(32.1334, 80, 47.8666, 16)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ground/temp_ground_3"]
+position = Vector2(2, 0)
+shape = SubResource("RectangleShape2D_36ygw")
