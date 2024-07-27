@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://m7f2bbcc2t1l"
-path="res://.godot/imported/Urban_Decay_Int_A4.png-8c685d2ea5a68562dfe4388f241caefb.ctex"
+uid="uid://bkgd1c31g1i7y"
+path="res://.godot/imported/Tiles.png-dcdd4354aa2e1752c2fbe3afa4a9639c.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Sprites/Environment/_tilesets/Urban_Decay_Int_A4.png"
-dest_files=["res://.godot/imported/Urban_Decay_Int_A4.png-8c685d2ea5a68562dfe4388f241caefb.ctex"]
+source_file="res://Sprites/Environment/_tilesets/Tiles.png"
+dest_files=["res://.godot/imported/Tiles.png-dcdd4354aa2e1752c2fbe3afa4a9639c.ctex"]
 
 [params]
 

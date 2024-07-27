@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://fdhre4eyy3mi"
-path="res://.godot/imported/Urban_Decay_Int_E_wrecked.png-aa495a0f050c425f748a61130af99738.ctex"
+uid="uid://dqdel7ftyj4co"
+path="res://.godot/imported/Props-01.png-f4424549f8662af421144eadf4eba068.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Sprites/Environment/_tilesets/Urban_Decay_Int_E_wrecked.png"
-dest_files=["res://.godot/imported/Urban_Decay_Int_E_wrecked.png-aa495a0f050c425f748a61130af99738.ctex"]
+source_file="res://Sprites/Environment/_tilesets/Props-01.png"
+dest_files=["res://.godot/imported/Props-01.png-f4424549f8662af421144eadf4eba068.ctex"]
 
 [params]
 

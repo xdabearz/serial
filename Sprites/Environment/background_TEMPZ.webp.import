@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://mm1m8wokoe0l"
-path="res://.godot/imported/!doors_dark.png-fc522b7bd350155f694e5b2ac5815766.ctex"
+uid="uid://dpcprn6uddtdf"
+path="res://.godot/imported/background_TEMPZ.webp-3f009b99c7248d5d9b24f8de18a20cbe.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Sprites/Environment/_tilesets/!doors_dark.png"
-dest_files=["res://.godot/imported/!doors_dark.png-fc522b7bd350155f694e5b2ac5815766.ctex"]
+source_file="res://Sprites/Environment/background_TEMPZ.webp"
+dest_files=["res://.godot/imported/background_TEMPZ.webp-3f009b99c7248d5d9b24f8de18a20cbe.ctex"]
 
 [params]
 
