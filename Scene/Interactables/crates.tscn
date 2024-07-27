@@ -1,6 +1,6 @@
 [gd_scene load_steps=9 format=3 uid="uid://bvgfjqhx3ccqj"]
 
-[ext_resource type="Script" path="res://Script/Interactables/crates.gd" id="1_drn21"]
+[ext_resource type="Script" path="res://Scripts/Interactables/crates.gd" id="1_tyqyf"]
 [ext_resource type="Texture2D" uid="uid://bfy1awp2hgx7g" path="res://Sprites/Interactables/Crate-animated.png" id="2_f60yc"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_3wcm6"]
@@ -135,7 +135,7 @@ _data = {
 
 [node name="Crates" type="StaticBody2D"]
 collision_layer = 2
-script = ExtResource("1_drn21")
+script = ExtResource("1_tyqyf")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 texture = ExtResource("2_f60yc")

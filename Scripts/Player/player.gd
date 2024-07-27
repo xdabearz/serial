@@ -6,6 +6,8 @@ extends CharacterBody2D
 # A stationary turret that fires at the player and can be destroyed
 # Melee combo attack while on the ground
 
+#BUGS
+#Cant collid with spikes :(
 
 var input
 @export var speed = 100.0
@@ -14,7 +16,7 @@ var input
 #VARIABLE FOR JUMPING
 var jump_count = 0
 @export var max_jump = 2
-@export var jump_force = 200
+@export var jump_force = 300
 
 # STATE MANAGEMENT
 var current_state = player_states.MOVE
@@ -27,11 +29,16 @@ func _ready():
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _physics_process(delta):
+	if player_data.health <= 0:
+		current_state = player_states.DEAD
+	
 	match current_state:
 		player_states.MOVE:
 			movement(delta)
 		player_states.ATTACK:
 			attack(delta)
+		player_states.DEAD:
+			dead()
 	
 func movement(delta):
 	input = Input.get_action_strength("ui_right") - Input.get_action_strength("ui_left")
@@ -92,6 +99,18 @@ func gravity_force():
 func attack(delta):
 	$anim.play("Attack")
 	input_movement(delta)
+	
+func dead():
+	$anim.play("Dead")
+	velocity.x = 0
+	gravity_force()
+	move_and_slide()
+	
+	await $anim.animation_finished
+	player_data.health = 4
+	player_data.currency = 0 #TODO Just for Demo
+	if get_tree():
+		get_tree().reload_current_scene()
 	
 	
 func input_movement(delta):
