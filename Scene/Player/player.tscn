@@ -202,3 +202,9 @@ collision_mask = 8
 shape = SubResource("RectangleShape2D_u8wdp")
 disabled = true
 debug_color = Color(0.927415, 0.159202, 0.542924, 0.42)
+
+[node name="wall_ray" type="RayCast2D" parent="."]
+position = Vector2(0, 11)
+target_position = Vector2(9, 0)
+collision_mask = 2
+hit_from_inside = true
