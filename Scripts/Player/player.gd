@@ -18,9 +18,17 @@ var jump_count = 0
 @export var max_jump = 2
 @export var jump_force = 300
 
+#Dodging
+@export var dodge_force = 100
+@export var dodge_cooldown = 0.5
+
+#Wall Jumping
+@onready var wall = $wall_ray
+@export var wallslide_speed = 0.3
+
 # STATE MANAGEMENT
 var current_state = player_states.MOVE
-enum player_states {MOVE, ATTACK, DEAD}
+enum player_states {MOVE, ATTACK, DEAD, DODGE}
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
@@ -37,6 +45,8 @@ func _physics_process(delta):
 			movement(delta)
 		player_states.ATTACK:
 			attack(delta)
+		player_states.DODGE:
+			dodging()
 		player_states.DEAD:
 			dead()
 	
@@ -47,12 +57,14 @@ func movement(delta):
 			velocity.x += speed * delta
 			velocity.x = clamp(speed, 100.0, speed)
 			$PlayerSprite.scale.x = 1
+			wall.scale.x = 1
 			$attack.position.x = 14
 			$anim.play("Walk")
 		if input < 0:
 			velocity.x -= speed * delta
 			velocity.x = clamp(-speed, 100.0, -speed)
 			$PlayerSprite.scale.x = -1
+			wall.scale.x = -1
 			$attack.position.x = -14
 			$anim.play("Walk")
 			
@@ -71,7 +83,7 @@ func movement(delta):
 		jump_count = 0
 	
 	#TODO: There needs to be a very tiny delay after landing on the floor before jump activates again
-	if Input.is_action_pressed("ui_accept") && is_on_floor() && jump_count < max_jump:
+	if Input.is_action_just_pressed("ui_accept") && is_on_floor() && jump_count < max_jump:
 		jump_count += 1
 		velocity.y -= jump_force
 		velocity.x = input
@@ -86,19 +98,54 @@ func movement(delta):
 	else:
 		gravity_force()
 		
+	#TODO: Wall slide FUCKING SUCKS
+	if wall_collider() && Input.is_action_just_pressed("ui_accept"):
+		#TOKNOW: Wall sliding animations would go here
+		if velocity.x > 0:
+			velocity = Vector2(-800, -350)
+		elif velocity.x < 0:
+			velocity = Vector2(800, -350)
+		
 	if Input.is_action_just_pressed("ui_attack"):
 		current_state = player_states.ATTACK
+		
+	if Input.is_action_just_pressed("ui_dodge"):
+		current_state = player_states.DODGE
 		
 	gravity_force()
 	move_and_slide()
 
 #TODO clamp fall so its the same
 func gravity_force():
-	velocity.y += gravity
+	if !wall_collider():
+		velocity.y += gravity
+	elif wall_collider():
+		velocity.y += wallslide_speed
 	
 func attack(delta):
 	$anim.play("Attack")
 	input_movement(delta)
+	
+#TODISCUSS - DO we want iframes on the dodge? I assume no
+#Everything about this is awful
+func dodging():
+	if velocity.x > 0:
+		velocity.x += dodge_force
+		await get_tree().create_timer(dodge_cooldown).timeout
+	elif velocity.x < 0:
+		velocity.x -= dodge_force
+		await get_tree().create_timer(dodge_cooldown).timeout
+	else:
+		if $PlayerSprite.scale.x == 1:
+			velocity.x += dodge_force
+			await get_tree().create_timer(dodge_cooldown).timeout
+			current_state = player_states.MOVE
+		if $PlayerSprite.scale.x == -1:
+			velocity.x -= dodge_force
+			await get_tree().create_timer(dodge_cooldown).timeout
+			current_state = player_states.MOVE
+		
+	move_and_slide()
 	
 func dead():
 	$anim.play("Dead")
@@ -108,11 +155,11 @@ func dead():
 	
 	await $anim.animation_finished
 	player_data.health = 4
-	player_data.currency = 0 #TODO Just for Demo
+	player_data.currency = 0 #TODO Just for Demo, wipes currency on death
 	if get_tree():
 		get_tree().reload_current_scene()
 	
-	
+#TONOTE: Specifically movement for attacking/using an action. Might be better named
 func input_movement(delta):
 	input = Input.get_action_strength("ui_right") - Input.get_action_strength("ui_left")
 	if input != 0:
@@ -129,6 +176,9 @@ func input_movement(delta):
 		
 	gravity_force()
 	move_and_slide()
+
+func wall_collider():
+	return wall.is_colliding()
 
 func reset_states():
 	current_state = player_states.MOVE
