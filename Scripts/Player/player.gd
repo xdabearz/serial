@@ -15,16 +15,30 @@ var input
 
 #VARIABLE FOR JUMPING
 var jump_count = 0
+var jump_timer = 0.0
+var acceleration = 10 #used to smooth out wall kicks
+@export var is_jumping = false
+var jump_time_limit = 0.2
 @export var max_jump = 2
-@export var jump_force = 300
+@export var jump_force = 200
 
 #Dodging
-@export var dodge_force = 100
+@export var dodge_force = 1000
 @export var dodge_cooldown = 0.5
+var dodge_timer = 0.0
+var dodge_duration = 0.5 # Duration of the dodge in seconds
+var dodge_distance = 5.0 # Distance to dodge
+
+var dodging_time = 0.0 # Tracks the time during dodging
+var is_dodging = false # Flag to check if currently dodging
+var can_dodge = true
+var dodge_direction = 1.0 # Direction of the dodge
+var locked_y_position = 0.0 # Stores the Y position when dodging starts
 
 #Wall Jumping
 @onready var wall = $wall_ray
 @export var wallslide_speed = 0.3
+
 
 # STATE MANAGEMENT
 var current_state = player_states.MOVE
@@ -45,23 +59,25 @@ func _physics_process(delta):
 			movement(delta)
 		player_states.ATTACK:
 			attack(delta)
-		player_states.DODGE:
-			dodging()
+		player_states.DODGE:   
+			dodging(delta)
 		player_states.DEAD:
 			dead()
+			
+
 	
 func movement(delta):
 	input = Input.get_action_strength("ui_right") - Input.get_action_strength("ui_left")
 	if input != 0:
 		if input > 0:
-			velocity.x += speed * delta
+			velocity.x += speed
 			velocity.x = clamp(speed, 100.0, speed)
 			$PlayerSprite.scale.x = 1
 			wall.scale.x = 1
 			$attack.position.x = 14
 			$anim.play("Walk")
 		if input < 0:
-			velocity.x -= speed * delta
+			velocity.x -= speed
 			velocity.x = clamp(-speed, 100.0, -speed)
 			$PlayerSprite.scale.x = -1
 			wall.scale.x = -1
@@ -81,30 +97,48 @@ func movement(delta):
 	#Jumping Code
 	if is_on_floor():
 		jump_count = 0
+		can_dodge = true
 	
-	#TODO: There needs to be a very tiny delay after landing on the floor before jump activates again
+
 	if Input.is_action_just_pressed("ui_accept") && is_on_floor() && jump_count < max_jump:
+		jump_timer += delta
+		is_jumping = true
+
 		jump_count += 1
 		velocity.y -= jump_force
 		velocity.x = input
-		
-	if !is_on_floor() && Input.is_action_just_pressed("ui_accept") && jump_count < max_jump:
+	
+	if is_jumping:
+		jump_timer += delta
+		if Input.is_action_just_released("ui_accept"):
+			# If the button is released early, stop accelerating upwards after the minimum jump height
+			if jump_timer >= jump_time_limit:
+				is_jumping = false
+		elif jump_timer >= jump_time_limit:
+		# Force stop jumping after a certain time to ensure minimum height
+			is_jumping = false
+	
+	if is_jumping && Input.is_action_just_pressed("ui_accept") && jump_count < max_jump:
 		jump_count += 1
 		velocity.y -= jump_force
 		velocity.x = input
-	if !is_on_floor() && Input.is_action_just_released("ui_accept") && jump_count < max_jump:
-		velocity.y = gravity
+	if is_jumping && Input.is_action_just_released("ui_accept") && jump_count < max_jump:
+		velocity.y = jump_force
 		velocity.x = input
 	else:
 		gravity_force()
 		
 	#TODO: Wall slide FUCKING SUCKS
-	if wall_collider() && Input.is_action_just_pressed("ui_accept"):
+	if wall_collider() && Input.is_action_just_pressed("ui_accept") && !is_on_floor():
 		#TOKNOW: Wall sliding animations would go here
 		if velocity.x > 0:
-			velocity = Vector2(-800, -350)
+			#velocity = Vector2(-200, -150)
+			velocity.x = lerp(-200, 0, acceleration * delta)
+			velocity.y = -200
 		elif velocity.x < 0:
-			velocity = Vector2(800, -350)
+			#velocity = Vector2(200, -150)
+			velocity.x = lerp(1000, 0, acceleration * delta)
+			velocity.y = -200
 		
 	if Input.is_action_just_pressed("ui_attack"):
 		current_state = player_states.ATTACK
@@ -128,22 +162,36 @@ func attack(delta):
 	
 #TODISCUSS - DO we want iframes on the dodge? I assume no
 #Everything about this is awful
-func dodging():
-	if velocity.x > 0:
-		velocity.x += dodge_force
-		await get_tree().create_timer(dodge_cooldown).timeout
-	elif velocity.x < 0:
-		velocity.x -= dodge_force
-		await get_tree().create_timer(dodge_cooldown).timeout
-	else:
-		if $PlayerSprite.scale.x == 1:
-			velocity.x += dodge_force
-			await get_tree().create_timer(dodge_cooldown).timeout
+func dodging(delta):
+	if not is_dodging && can_dodge:
+		if velocity.x > 0:
+			dodge_direction = 1.0
+		elif velocity.x < 0:
+			dodge_direction = -1.0
+		else:
+			# Check sprite direction for stationary player
+			dodge_direction = $PlayerSprite.scale.x
+
+		is_dodging = true
+		dodging_time = 0.0
+		current_state = player_states.DODGE
+		locked_y_position = position.y
+		
+		velocity.x = 0.0
+		
+	if is_dodging:
+		dodging_time += delta
+		if dodging_time <= dodge_duration:
+			# Calculate interpolation factor
+			can_dodge = false
+			var t = dodging_time / dodge_duration
+			var target_position = position + Vector2(dodge_distance * dodge_direction, 0)
+			position.x = lerp(position.x, target_position.x, t)
+		else:
+			# End of dodge
+			is_dodging = false
 			current_state = player_states.MOVE
-		if $PlayerSprite.scale.x == -1:
-			velocity.x -= dodge_force
-			await get_tree().create_timer(dodge_cooldown).timeout
-			current_state = player_states.MOVE
+		position.y = locked_y_position
 		
 	move_and_slide()
 	
@@ -182,3 +230,8 @@ func wall_collider():
 
 func reset_states():
 	current_state = player_states.MOVE
+
+
+func lerp(start: float, end: float, weight: float) -> float:
+	# Linear interpolation between start and end
+	return start + (end - start) * weight
