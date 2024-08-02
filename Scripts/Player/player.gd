@@ -15,8 +15,12 @@ var input
 
 #VARIABLE FOR JUMPING
 var jump_count = 0
+var jump_timer = 0.0
+var acceleration = 10 #used to smooth out wall kicks
+@export var is_jumping = false
+var jump_time_limit = 0.2
 @export var max_jump = 2
-@export var jump_force = 300
+@export var jump_force = 200
 
 #Dodging
 @export var dodge_force = 100
@@ -45,7 +49,7 @@ func _physics_process(delta):
 			movement(delta)
 		player_states.ATTACK:
 			attack(delta)
-		player_states.DODGE:
+		player_states.DODGE:   
 			dodging()
 		player_states.DEAD:
 			dead()
@@ -82,29 +86,46 @@ func movement(delta):
 	if is_on_floor():
 		jump_count = 0
 	
-	#TODO: There needs to be a very tiny delay after landing on the floor before jump activates again
+
 	if Input.is_action_just_pressed("ui_accept") && is_on_floor() && jump_count < max_jump:
+		jump_timer += delta
+		is_jumping = true
+
 		jump_count += 1
 		velocity.y -= jump_force
 		velocity.x = input
-		
-	if !is_on_floor() && Input.is_action_just_pressed("ui_accept") && jump_count < max_jump:
+	
+	if is_jumping:
+		jump_timer += delta
+		if Input.is_action_just_released("ui_accept"):
+			# If the button is released early, stop accelerating upwards after the minimum jump height
+			if jump_timer >= jump_time_limit:
+				is_jumping = false
+		elif jump_timer >= jump_time_limit:
+		# Force stop jumping after a certain time to ensure minimum height
+			is_jumping = false
+	
+	if is_jumping && Input.is_action_just_pressed("ui_accept") && jump_count < max_jump:
 		jump_count += 1
 		velocity.y -= jump_force
 		velocity.x = input
-	if !is_on_floor() && Input.is_action_just_released("ui_accept") && jump_count < max_jump:
-		velocity.y = gravity
+	if is_jumping && Input.is_action_just_released("ui_accept") && jump_count < max_jump:
+		velocity.y = jump_force
 		velocity.x = input
 	else:
 		gravity_force()
 		
 	#TODO: Wall slide FUCKING SUCKS
-	if wall_collider() && Input.is_action_just_pressed("ui_accept"):
+	if wall_collider() && Input.is_action_just_pressed("ui_accept") && !is_on_floor():
 		#TOKNOW: Wall sliding animations would go here
 		if velocity.x > 0:
-			velocity = Vector2(-800, -350)
+			#velocity = Vector2(-200, -150)
+			velocity.x = lerp(-1000, 0, acceleration * delta)
+			velocity.y = -200
 		elif velocity.x < 0:
-			velocity = Vector2(800, -350)
+			#velocity = Vector2(200, -150)
+			velocity.x = lerp(1000, 0, acceleration * delta)
+			velocity.y = -200
 		
 	if Input.is_action_just_pressed("ui_attack"):
 		current_state = player_states.ATTACK
