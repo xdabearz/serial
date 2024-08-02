@@ -31,6 +31,7 @@ var dodge_distance = 5.0 # Distance to dodge
 
 var dodging_time = 0.0 # Tracks the time during dodging
 var is_dodging = false # Flag to check if currently dodging
+var can_dodge = true
 var dodge_direction = 1.0 # Direction of the dodge
 var locked_y_position = 0.0 # Stores the Y position when dodging starts
 
@@ -59,35 +60,24 @@ func _physics_process(delta):
 		player_states.ATTACK:
 			attack(delta)
 		player_states.DODGE:   
-			dodging()
+			dodging(delta)
 		player_states.DEAD:
 			dead()
 			
-	if is_dodging:
-		dodging_time += delta
-		if dodging_time <= dodge_duration:
-			# Calculate interpolation factor
-			var t = dodging_time / dodge_duration
-			var target_position = position + Vector2(dodge_distance * dodge_direction, 0)
-			position.x = lerp(position.x, target_position.x, t)
-		else:
-			# End of dodge
-			is_dodging = false
-			current_state = player_states.MOVE
-		position.y = locked_y_position
+
 	
 func movement(delta):
 	input = Input.get_action_strength("ui_right") - Input.get_action_strength("ui_left")
 	if input != 0:
 		if input > 0:
-			velocity.x += speed * delta
+			velocity.x += speed
 			velocity.x = clamp(speed, 100.0, speed)
 			$PlayerSprite.scale.x = 1
 			wall.scale.x = 1
 			$attack.position.x = 14
 			$anim.play("Walk")
 		if input < 0:
-			velocity.x -= speed * delta
+			velocity.x -= speed
 			velocity.x = clamp(-speed, 100.0, -speed)
 			$PlayerSprite.scale.x = -1
 			wall.scale.x = -1
@@ -107,6 +97,7 @@ func movement(delta):
 	#Jumping Code
 	if is_on_floor():
 		jump_count = 0
+		can_dodge = true
 	
 
 	if Input.is_action_just_pressed("ui_accept") && is_on_floor() && jump_count < max_jump:
@@ -171,8 +162,8 @@ func attack(delta):
 	
 #TODISCUSS - DO we want iframes on the dodge? I assume no
 #Everything about this is awful
-func dodging():
-	if not is_dodging:
+func dodging(delta):
+	if not is_dodging && can_dodge:
 		if velocity.x > 0:
 			dodge_direction = 1.0
 		elif velocity.x < 0:
@@ -187,6 +178,20 @@ func dodging():
 		locked_y_position = position.y
 		
 		velocity.x = 0.0
+		
+	if is_dodging:
+		dodging_time += delta
+		if dodging_time <= dodge_duration:
+			# Calculate interpolation factor
+			can_dodge = false
+			var t = dodging_time / dodge_duration
+			var target_position = position + Vector2(dodge_distance * dodge_direction, 0)
+			position.x = lerp(position.x, target_position.x, t)
+		else:
+			# End of dodge
+			is_dodging = false
+			current_state = player_states.MOVE
+		position.y = locked_y_position
 		
 	move_and_slide()
 	
